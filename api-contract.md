@@ -2,6 +2,10 @@
 
 Base URL: `/api/v1`
 
+> **Note**: Updated 2024-12-29
+> - 일부 엔드포인트는 백엔드 구현 상태에 따라 존재하지 않을 수 있음
+> - `/plans/current`, `/today`, `/reviews/current`는 선택적 구현
+
 ## 공통 사항
 
 ### 인증
