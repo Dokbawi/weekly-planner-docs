@@ -16,3 +16,7 @@ weekly-planner-docs/
 1. API 변경 시 `api-contract.md` 먼저 수정
 2. 도메인 변경 시 `domain-model.md` 먼저 수정
 3. Backend/Frontend 각각 submodule update 후 반영
+4. **코드 예시 작성 시 실제 구현 파일 참조**:
+   - 긴 코드 예시 대신 실제 파일 위치와 줄 번호 명시
+   - 예: `See implementation: src/stores/authStore.ts:14-26`
+   - 핵심 시그니처만 보여주고 전체 구현은 파일 참조로 대체

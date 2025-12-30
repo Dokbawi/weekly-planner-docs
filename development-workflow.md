@@ -1178,6 +1178,44 @@ xdg-open test-api-endpoints.html  # Linux
 **When to update main repository docs:**
 
 1. **Setup instructions change** → Update `README.md`
+
+### Code Example Guidelines
+
+**IMPORTANT: Reference actual implementation instead of duplicating code**
+
+When documenting code in markdown files:
+
+1. **Don't duplicate long code examples**
+   ```markdown
+   ❌ BAD: Copying entire function implementation
+   ✅ GOOD: Reference with line numbers
+   ```
+
+2. **Use file references with line numbers**
+   ```markdown
+   // Full implementation at:
+   // src/stores/authStore.ts:14-26
+   export const useAuthStore = create<AuthState>()(
+     persist(/* ... */)
+   )
+   ```
+
+3. **Show only essential signatures**
+   ```markdown
+   // See implementation: src/api/tasks.ts:4-38
+   export const taskApi = {
+     create: (planId: string, date: string, data: CreateTaskRequest) => Promise<Task>
+     update: (planId: string, taskId: string, data: UpdateTaskRequest) => Promise<Task>
+     // ... other methods
+   }
+   ```
+
+4. **Benefits of this approach**
+   - Single source of truth (actual code)
+   - Documentation stays up-to-date
+   - Smaller file sizes
+   - Easier to maintain
+   - IDE can navigate to actual files
 2. **Project-specific context** → Update `CLAUDE.md`
 3. **Build process changes** → Update `README.md`
 
