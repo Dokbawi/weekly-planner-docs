@@ -476,3 +476,19 @@
 - 성공: 우하단, 초록색, 3초 후 자동 닫힘
 - 에러: 우하단, 빨간색, 수동 닫기
 - 정보: 우하단, 파란색, 5초 후 자동 닫힘
+
+---
+
+## Related Documentation
+
+- [Domain Model](./domain-model.md) - Data structures used in UI
+- [API Contract](./api-contract.md) - Backend API endpoints
+- [Business Rules](./business-rules.md) - UI behavior and validation
+- [Development Workflow](./development-workflow.md) - Frontend development guide
+- [README](./README.md) - Documentation index
+
+---
+
+**Frontend Implementation:** See `weekly-planner-frontend` repository for React components
+
+**Last Updated:** 2024-12-21

@@ -2139,4 +2139,17 @@ Docs:
 
 ---
 
+## Related Documentation
+
+- [README](./README.md) - Documentation index and navigation
+- [API Contract](./api-contract.md) - REST API specification
+- [Backend Integration Guide](./backend-integration-guide.md) - API integration details
+- [Domain Model](./domain-model.md) - Entity definitions
+- [Business Rules](./business-rules.md) - Business logic rules
+- [CLAUDE.md](./CLAUDE.md) - Documentation maintenance guidelines
+
+---
+
+**Last Updated:** 2025-12-31
+
 **Remember:** This is a living document. Update it as workflows evolve and new patterns emerge. If you find something unclear or missing, please improve it for the next developer!

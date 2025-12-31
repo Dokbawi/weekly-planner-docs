@@ -425,3 +425,22 @@ When making breaking changes:
 ---
 
 **Need help? Have questions?** Check the appropriate documentation above or refer to the main repository CLAUDE.md files for implementation-specific details.
+
+---
+
+## Navigation
+
+### Main Documentation Files
+- [API Contract](./api-contract.md)
+- [Domain Model](./domain-model.md)
+- [Business Rules](./business-rules.md)
+- [UI Specification](./ui-spec.md)
+
+### Development Guides
+- [Backend Integration Guide](./backend-integration-guide.md)
+- [Development Workflow](./development-workflow.md)
+- [CLAUDE.md](./CLAUDE.md)
+
+---
+
+**Last Updated:** 2025-12-31

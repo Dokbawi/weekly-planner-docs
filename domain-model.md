@@ -7,6 +7,8 @@
 
 ## 1. User (사용자)
 
+**Schema:** See `src/user/schemas/user.schema.ts`
+
 ```
 User {
     id: String (ObjectId)
@@ -31,6 +33,8 @@ UserSettings {
 ---
 
 ## 2. WeeklyPlan (주간 계획)
+
+**Schema:** See `src/plan/schemas/plan.schema.ts`
 
 ```
 WeeklyPlan {
@@ -131,6 +135,10 @@ IN_PROGRESS → POSTPONED
 
 **핵심 기능**: WeeklyPlan이 CONFIRMED 상태일 때만 기록
 
+**Schema:** See `src/changelog/schemas/changelog.schema.ts`
+
+**Service:** See `src/changelog/changelog.service.ts:13` for tracking logic
+
 ```
 ChangeLog {
     id: String (ObjectId)
@@ -173,6 +181,10 @@ ChangeType {
 
 ## 6. Notification (알림)
 
+**Schema:** See `src/notification/schemas/notification.schema.ts`
+
+**Scheduler:** See `src/notification/notification.scheduler.ts` for notification generation
+
 ```
 Notification {
     id: String (ObjectId)
@@ -200,6 +212,8 @@ NotificationType {
 ## 7. WeeklyReview (주간 회고)
 
 **주의**: DB에 저장하지 않고 실시간 생성 (ChangeLog 기반 집계)
+
+**Service:** See `src/review/review.service.ts` for review generation logic
 
 ```
 WeeklyReview {
@@ -244,6 +258,8 @@ DailyStatistics {
 | `change_logs` | ChangeLog | `weeklyPlanId + changedAt`, `userId + targetDate` |
 | `notifications` | Notification | `userId + isRead + createdAt` |
 
+**Schemas:** See `src/*/schemas/` directory for MongoDB schema implementations
+
 ---
 
 ## 시간대 처리
@@ -252,3 +268,17 @@ DailyStatistics {
 - `LocalDate`, `LocalTime`은 사용자 timezone 기준
 - API 응답 시 사용자 timezone으로 변환
 - 프론트엔드에서 표시 시 로컬 시간으로 변환
+
+---
+
+## Related Documentation
+
+- [API Contract](./api-contract.md) - REST API specification using these models
+- [Business Rules](./business-rules.md) - Business logic and validation rules
+- [Backend Integration Guide](./backend-integration-guide.md) - Implementation details
+- [Development Workflow](./development-workflow.md) - Development best practices
+- [README](./README.md) - Documentation index
+
+---
+
+**Last Updated:** 2024-12-21

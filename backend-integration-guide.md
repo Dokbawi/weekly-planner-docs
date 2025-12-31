@@ -80,42 +80,16 @@ Called on every page load for authenticated users to get the current week's plan
 - Should never return 404
 
 **Current Frontend Workaround:**
-```javascript
-// In src/api/plans.ts
-getCurrent: async () => {
-  // Calculate current week's Monday
-  const today = new Date()
-  const dayOfWeek = today.getDay()
-  const monday = new Date(today)
-  monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1))
-  const weekStartDate = monday.toISOString().split('T')[0]
 
-  // Fetch plans list and find current week
-  const response = await apiClient.get('/plans', { params: { page: 0, size: 10 }})
-  const currentPlan = response.content.find(plan =>
-    plan.weekStartDate === weekStartDate
-  )
+See implementation in frontend repository: `src/api/plans.ts` (getCurrent method)
 
-  if (currentPlan) return { success: true, data: currentPlan }
-
-  // Create new plan if not found
-  return await apiClient.post('/plans', { weekStartDate })
-}
-```
+The frontend calculates the current week's Monday and fetches the plans list to find the matching plan.
 
 **Recommended Implementation:**
-```java
-@GetMapping("/plans/current")
-public ResponseEntity<ApiResponse<WeeklyPlan>> getCurrentPlan() {
-    LocalDate today = LocalDate.now();
-    LocalDate weekStart = today.with(DayOfWeek.MONDAY);
 
-    WeeklyPlan plan = planRepository.findByWeekStartDate(weekStart)
-        .orElseGet(() -> createPlan(weekStart));
+See backend implementation reference: `src/plan/plan.controller.ts` and `src/plan/plan.service.ts`
 
-    return ResponseEntity.ok(ApiResponse.success(plan));
-}
-```
+The backend should find or create a plan for the current week based on the user's week start day setting.
 
 ### 2. GET /today
 
@@ -145,27 +119,10 @@ Main endpoint for the "Today" page - one of the most frequently accessed pages.
 ```
 
 **Current Frontend Workaround:**
-```javascript
-// In src/api/today.ts
-get: async () => {
-  // Get current plan
-  const planResponse = await planApi.getCurrent()
-  const today = new Date().toISOString().split('T')[0]
-  const todayPlan = planResponse.data.dailyPlans[today]
 
-  // Calculate statistics from tasks
-  const tasks = todayPlan.tasks || []
-  const statistics = {
-    total: tasks.length,
-    completed: tasks.filter(t => t.status === 'COMPLETED').length,
-    pending: tasks.filter(t => t.status === 'PENDING').length,
-    inProgress: tasks.filter(t => t.status === 'IN_PROGRESS').length,
-    cancelled: tasks.filter(t => t.status === 'CANCELLED').length,
-  }
+See implementation in frontend repository: `src/api/today.ts` (get method)
 
-  return { success: true, data: { date: today, tasks, statistics, ... }}
-}
-```
+The frontend retrieves the current plan and extracts today's data, calculating statistics from the tasks.
 
 ### 3. GET /reviews/current
 
@@ -210,17 +167,10 @@ Called when user opens the Review page.
 ```
 
 **Current Frontend Workaround:**
-```javascript
-// In src/api/reviews.ts
-getCurrent: async () => {
-  // Get current plan first
-  const planResponse = await planApi.getCurrent()
-  const planId = planResponse.data?.id
 
-  // Then get review for that plan
-  return await apiClient.get(`/plans/${planId}/review`)
-}
-```
+See implementation in frontend repository: `src/api/reviews.ts` (getCurrent method)
+
+The frontend retrieves the current plan ID first, then fetches the review for that specific plan.
 
 ---
 
@@ -259,15 +209,10 @@ getCurrent: async () => {
 ```
 
 **Frontend Implementation:**
-```typescript
-// src/api/auth.ts
-interface LoginResponse {
-  accessToken: string  // MUST be accessToken, not token
-  tokenType: string
-  expiresIn: number
-  user?: User
-}
-```
+
+See `src/api/auth.ts` in frontend repository for LoginResponse interface definition.
+
+Key requirement: Field must be named `accessToken`, not `token`.
 
 ### Task Endpoints Require planId
 
@@ -306,11 +251,10 @@ POST /plans/{planId}/tasks?date=2024-01-01
 ```
 
 **Frontend Implementation:**
-```typescript
-// src/api/tasks.ts
-create: (planId: string, date: string, data: Omit<CreateTaskRequest, 'date'>) =>
-  apiClient.post(`/plans/${planId}/tasks?date=${date}`, data)
-```
+
+See `src/api/tasks.ts` in frontend repository for task creation method.
+
+The date is passed as a query parameter, not in the request body.
 
 ### Notification Read Operations
 
@@ -331,14 +275,10 @@ POST /notifications/read-all
 **Reason:** These operations don't update a resource field - they trigger an action. POST is more semantically correct.
 
 **Frontend Implementation:**
-```typescript
-// src/api/notifications.ts
-markAsRead: (notificationId: string) =>
-  apiClient.post(`/notifications/${notificationId}/read`)
 
-markAllAsRead: () =>
-  apiClient.post('/notifications/read-all')
-```
+See `src/api/notifications.ts` in frontend repository.
+
+Uses POST method (not PUT) for marking notifications as read.
 
 ### Plan Confirmation Method
 
@@ -357,11 +297,10 @@ POST /plans/{planId}/confirm
 **Reason:** Confirmation is a state transition action, not a field update.
 
 **Frontend Implementation:**
-```typescript
-// src/api/plans.ts
-confirm: (planId: string) =>
-  apiClient.post(`/plans/${planId}/confirm`)
-```
+
+See `src/api/plans.ts` in frontend repository.
+
+Uses POST method (not PUT) for plan confirmation.
 
 ---
 
@@ -391,20 +330,10 @@ All responses MUST use this format:
 ```
 
 **Frontend Axios Interceptor:**
-```typescript
-// src/api/client.ts
-apiClient.interceptors.response.use(
-  (response) => response.data,  // Auto-unwrap to get { success, data }
-  (error) => {
-    if (error.response?.status === 401) {
-      // Auto logout on unauthorized
-      useAuthStore.getState().logout()
-      window.location.href = '/login'
-    }
-    return Promise.reject(error.response?.data?.error || error)
-  }
-)
-```
+
+See `src/api/client.ts` in frontend repository for response interceptor implementation.
+
+The interceptor auto-unwraps responses and handles 401 errors with automatic logout.
 
 ### Paginated Responses
 
@@ -583,60 +512,44 @@ enum Priority {
 5. Backend: If plan is CONFIRMED, create ChangeLog (TASK_CREATED)
 6. Backend: Return created task
 
-**Example Request:**
-```json
-POST /plans/plan_123/tasks?date=2024-01-01
-{
-  "title": "Project meeting",
-  "description": "Q1 planning discussion",
-  "scheduledTime": "2024-01-01T14:00:00Z",
-  "estimatedMinutes": 60,
-  "reminder": {
-    "enabled": true,
-    "minutesBefore": 10
-  },
-  "priority": "HIGH",
-  "tags": ["work", "meeting"]
-}
-```
+**Example Request Format:**
+
+See [API Contract](./api-contract.md#3-tasks) for detailed request/response examples.
+
+Key points:
+- Date passed as query parameter
+- Reminder settings and priority are optional
+- Returns created task with generated ID
 
 ### Task Update with Change Tracking
 
 When plan is CONFIRMED, track changes:
 
-**Example:**
-```json
-PUT /plans/plan_123/tasks/task_456
-{
-  "scheduledTime": "2024-01-01T15:00:00Z",
-  "reason": "Meeting time changed"
-}
+**Change Tracking Logic:**
 
-Backend should:
+See implementation: `src/changelog/changelog.service.ts:13`
+
+When a task is updated in CONFIRMED plan:
 1. Compare old and new values
-2. Create ChangeLog entry
-   - changeType: TIME_CHANGED
-   - changes: [{ field: "scheduledTime", previousValue: "14:00", newValue: "15:00" }]
-   - reason: "Meeting time changed"
-3. Update task
-4. Return updated task
-```
+2. Create ChangeLog entry with detected changes
+3. Store change reason if provided
+4. Update task and return
+
+See [API Contract](./api-contract.md#3-tasks) for request/response format.
 
 ### Task Move Operation
 
-```json
-POST /plans/plan_123/tasks/task_456/move
-{
-  "targetDate": "2024-01-02",
-  "reason": "Not enough time today"
-}
+**Task Move Logic:**
 
-Backend should:
-1. Update task date to targetDate
-2. Set status to POSTPONED
-3. Create ChangeLog (MOVED_TO_ANOTHER_DAY)
+See implementation: `src/plan/plan.service.ts:265`
+
+Move operation process:
+1. Update task date to target date
+2. Set original task status to POSTPONED
+3. Create ChangeLog entry
 4. Return updated task
-```
+
+See [API Contract](./api-contract.md#put-taskstaskidmove) for request/response format.
 
 ---
 
@@ -907,3 +820,17 @@ If you encounter issues not covered here:
 **Frontend Repository:** weekly-planner-frontend
 **Docs Repository:** weekly-planner-docs (this submodule)
 **API Contract:** See `api-contract.md` for full specification
+
+---
+
+## Related Documentation
+
+- [API Contract](./api-contract.md) - Complete REST API specification
+- [Domain Model](./domain-model.md) - Entity definitions and schemas
+- [Business Rules](./business-rules.md) - Business logic and validation rules
+- [Development Workflow](./development-workflow.md) - Development best practices
+- [README](./README.md) - Documentation index
+
+---
+
+**Last Updated:** 2025-12-29

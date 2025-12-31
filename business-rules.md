@@ -43,6 +43,8 @@
 | POSTPONED | - | 상태 변경 불가, 새 날짜에서 PENDING으로 시작 |
 
 ### 2.3 Task 이동 (Move)
+**Implementation:** See `src/plan/plan.service.ts:265`
+
 - 같은 WeeklyPlan 내 다른 날짜로만 이동 가능
 - 이동 시 원본 Task의 상태는 POSTPONED로 변경
 - 대상 날짜에 복사본 생성 (상태: PENDING, 새 ID 부여)
@@ -56,6 +58,8 @@
 ---
 
 ## 3. 변경 이력 (ChangeLog)
+
+**Implementation:** See `src/changelog/changelog.service.ts:13`
 
 ### 3.1 기록 조건
 - WeeklyPlan.status == CONFIRMED 일 때만 기록
@@ -87,6 +91,8 @@
 
 ## 4. 알림 (Notification)
 
+**Implementation:** See `src/notification/notification.scheduler.ts`
+
 ### 4.1 Task 알림 (TASK_REMINDER)
 - `scheduledTime`이 설정되고 `reminder.enabled == true`인 Task 대상
 - `scheduledTime - reminder.minutesBefore` 시점에 알림 생성
@@ -113,6 +119,10 @@
 ---
 
 ## 5. 주간 회고 (Weekly Review)
+
+**Implementation:** See `src/review/review.service.ts`
+
+**주의**: DB에 저장하지 않고 실시간 생성 (ChangeLog 기반 집계)
 
 ### 5.1 통계 계산
 ```
@@ -169,8 +179,26 @@ completionRate = (completed / totalPlanned) * 100
 - 관련 ChangeLog도 함께 삭제
 - 관련 Notification도 함께 삭제
 
+**Implementation:** See cascade delete logic in `src/plan/plan.service.ts`
+
 ### 8.2 User 삭제 시
 - 모든 WeeklyPlan 삭제
 - 모든 ChangeLog 삭제
 - 모든 Notification 삭제
 - (Soft delete 고려 가능)
+
+**Implementation:** See cascade delete logic in `src/user/user.service.ts`
+
+---
+
+## Related Documentation
+
+- [Domain Model](./domain-model.md) - Entity definitions and relationships
+- [API Contract](./api-contract.md) - REST API specification
+- [Backend Integration Guide](./backend-integration-guide.md) - Implementation details
+- [Development Workflow](./development-workflow.md) - Development best practices
+- [README](./README.md) - Documentation index
+
+---
+
+**Last Updated:** 2024-12-21

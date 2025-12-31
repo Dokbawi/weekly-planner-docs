@@ -48,6 +48,8 @@ Base URL: `/api/v1`
 ### POST /auth/register
 회원가입
 
+**Implementation:** See `src/auth/auth.controller.ts` and `src/auth/auth.service.ts`
+
 **Request**
 ```json
 {
@@ -72,6 +74,8 @@ Base URL: `/api/v1`
 
 ### POST /auth/login
 로그인
+
+**Implementation:** See `src/auth/auth.controller.ts` and `src/auth/auth.service.ts`
 
 **Request**
 ```json
@@ -100,6 +104,8 @@ Base URL: `/api/v1`
 ### GET /auth/me
 현재 사용자 정보
 
+**Implementation:** See `src/auth/auth.controller.ts` and `src/user/user.service.ts`
+
 **Response** `200 OK`
 ```json
 {
@@ -123,6 +129,8 @@ Base URL: `/api/v1`
 ### PUT /auth/settings
 사용자 설정 수정
 
+**Implementation:** See `src/user/user.service.ts`
+
 **Request**
 ```json
 {
@@ -140,6 +148,8 @@ Base URL: `/api/v1`
 
 ### GET /plans/current
 현재 주 계획 조회. 없으면 자동 생성.
+
+**Implementation:** See `src/plan/plan.controller.ts` and `src/plan/plan.service.ts`
 
 **Response** `200 OK`
 ```json
@@ -168,8 +178,12 @@ Base URL: `/api/v1`
 ### GET /plans/{planId}
 특정 주간 계획 조회
 
+**Implementation:** See `src/plan/plan.controller.ts` and `src/plan/plan.service.ts`
+
 ### GET /plans
 주간 계획 목록 조회
+
+**Implementation:** See `src/plan/plan.controller.ts` and `src/plan/plan.service.ts`
 
 **Query Parameters**
 | Param | Type | Description |
@@ -195,6 +209,8 @@ Base URL: `/api/v1`
 ### PUT /plans/{planId}/confirm
 계획 확정. 이후 변경사항 추적 시작.
 
+**Implementation:** See `src/plan/plan.controller.ts` and `src/plan/plan.service.ts`
+
 **Response** `200 OK`
 ```json
 {
@@ -214,6 +230,8 @@ Base URL: `/api/v1`
 ### PUT /plans/{planId}/memo
 일일 메모 수정
 
+**Implementation:** See `src/plan/plan.controller.ts` and `src/plan/plan.service.ts`
+
 **Request**
 ```json
 {
@@ -229,6 +247,8 @@ Base URL: `/api/v1`
 ### GET /plans/{planId}/tasks
 주간 계획의 전체 Task 조회
 
+**Implementation:** See `src/plan/plan.controller.ts` and `src/plan/plan.service.ts`
+
 **Query Parameters**
 | Param | Type | Description |
 |-------|------|-------------|
@@ -237,6 +257,8 @@ Base URL: `/api/v1`
 
 ### POST /plans/{planId}/tasks
 Task 추가
+
+**Implementation:** See `src/plan/plan.controller.ts` and `src/plan/plan.service.ts`
 
 **Request**
 ```json
@@ -272,6 +294,8 @@ Task 추가
 ### PUT /tasks/{taskId}
 Task 수정
 
+**Implementation:** See `src/plan/plan.controller.ts` and `src/plan/plan.service.ts`
+
 **Request**
 ```json
 {
@@ -285,6 +309,8 @@ Task 수정
 
 ### PUT /tasks/{taskId}/status
 Task 상태 변경
+
+**Implementation:** See `src/plan/plan.controller.ts` and `src/plan/plan.service.ts`
 
 **Request**
 ```json
@@ -309,6 +335,8 @@ Task 상태 변경
 ### PUT /tasks/{taskId}/move
 Task를 다른 날로 이동
 
+**Implementation:** See `src/plan/plan.controller.ts` and `src/plan/plan.service.ts:265` (Task move logic)
+
 **Request**
 ```json
 {
@@ -332,6 +360,8 @@ Task를 다른 날로 이동
 ### DELETE /tasks/{taskId}
 Task 삭제
 
+**Implementation:** See `src/plan/plan.controller.ts` and `src/plan/plan.service.ts`
+
 **Query Parameters**
 | Param | Type | Description |
 |-------|------|-------------|
@@ -343,6 +373,8 @@ Task 삭제
 
 ### GET /plans/{planId}/changes
 변경 이력 조회
+
+**Implementation:** See `src/changelog/changelog.controller.ts` and `src/changelog/changelog.service.ts:13`
 
 **Query Parameters**
 | Param | Type | Description |
@@ -388,6 +420,8 @@ Task 삭제
 
 ### GET /reviews/current
 현재 주 회고 데이터
+
+**Implementation:** See `src/review/review.controller.ts` and `src/review/review.service.ts`
 
 **Response** `200 OK`
 ```json
@@ -435,6 +469,8 @@ Task 삭제
 ### GET /reviews/{weekStartDate}
 특정 주 회고 조회
 
+**Implementation:** See `src/review/review.controller.ts` and `src/review/review.service.ts`
+
 **Path Parameter**: `weekStartDate` (yyyy-MM-dd)
 
 ---
@@ -443,6 +479,8 @@ Task 삭제
 
 ### GET /notifications
 알림 목록 조회
+
+**Implementation:** See `src/notification/notification.controller.ts` and `src/notification/notification.service.ts`
 
 **Query Parameters**
 | Param | Type | Description |
@@ -478,6 +516,8 @@ Task 삭제
 ### GET /notifications/unread/count
 읽지 않은 알림 수
 
+**Implementation:** See `src/notification/notification.controller.ts` and `src/notification/notification.service.ts`
+
 **Response** `200 OK`
 ```json
 {
@@ -491,8 +531,12 @@ Task 삭제
 ### PUT /notifications/{notificationId}/read
 알림 읽음 처리
 
+**Implementation:** See `src/notification/notification.controller.ts` and `src/notification/notification.service.ts`
+
 ### PUT /notifications/read-all
 전체 알림 읽음 처리
+
+**Implementation:** See `src/notification/notification.controller.ts` and `src/notification/notification.service.ts`
 
 ---
 
@@ -500,6 +544,8 @@ Task 삭제
 
 ### GET /today
 오늘 할 일 조회 (현재 주 계획에서 오늘 날짜)
+
+**Implementation:** See `src/plan/plan.controller.ts` and `src/plan/plan.service.ts`
 
 **Response** `200 OK`
 ```json
@@ -528,3 +574,17 @@ Task 삭제
     }
 }
 ```
+
+---
+
+## Related Documentation
+
+- [Domain Model](./domain-model.md) - Entity definitions and schemas
+- [Business Rules](./business-rules.md) - Business logic and validation rules
+- [Backend Integration Guide](./backend-integration-guide.md) - Implementation status and testing
+- [Development Workflow](./development-workflow.md) - Development best practices
+- [README](./README.md) - Documentation index
+
+---
+
+**Last Updated:** 2024-12-29
