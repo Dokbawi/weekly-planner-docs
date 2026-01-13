@@ -2,10 +2,9 @@
 
 Base URL: `/api/v1`
 
-> **Note**: Updated 2024-12-29
-> - 일부 엔드포인트는 백엔드 구현 상태에 따라 존재하지 않을 수 있음
-> - `/plans/current`, `/today`, `/reviews/current`는 선택적 구현
-> - 실제 구현된 API는 백엔드 문서를 참조
+> **Note**: Updated 2025-01-13
+> - 실제 백엔드 구현과 동기화됨
+> - Swagger UI: http://localhost:3000/api-docs 에서 실시간 확인 가능
 
 ## 공통 사항
 
@@ -35,11 +34,11 @@ Base URL: `/api/v1`
 ### 공통 에러 코드
 | Code | HTTP Status | Description |
 |------|-------------|-------------|
-| `UNAUTHORIZED` | 401 | 인증 필요 |
-| `FORBIDDEN` | 403 | 권한 없음 |
+| `AUTH004` | 401 | 인증 필요 |
+| `AUTH004` | 403 | 권한 없음 |
 | `NOT_FOUND` | 404 | 리소스 없음 |
-| `VALIDATION_ERROR` | 400 | 입력값 오류 |
-| `INTERNAL_ERROR` | 500 | 서버 오류 |
+| `GEN001` | 400 | 입력값 오류 |
+| `GEN002` | 500 | 서버 오류 |
 
 ---
 
@@ -47,8 +46,6 @@ Base URL: `/api/v1`
 
 ### POST /auth/register
 회원가입
-
-**Implementation:** See `src/auth/auth.controller.ts` and `src/auth/auth.service.ts`
 
 **Request**
 ```json
@@ -64,18 +61,23 @@ Base URL: `/api/v1`
 {
     "success": true,
     "data": {
-        "id": "user_123",
+        "id": "507f1f77bcf86cd799439011",
         "email": "user@example.com",
         "name": "홍길동",
-        "createdAt": "2024-01-01T00:00:00Z"
+        "settings": {
+            "planningDay": 0,
+            "reviewDay": 6,
+            "defaultReminderMinutes": 30,
+            "timezone": "Asia/Seoul",
+            "notificationEnabled": true
+        },
+        "createdAt": "2025-01-01T00:00:00.000Z"
     }
 }
 ```
 
 ### POST /auth/login
 로그인
-
-**Implementation:** See `src/auth/auth.controller.ts` and `src/auth/auth.service.ts`
 
 **Request**
 ```json
@@ -90,13 +92,9 @@ Base URL: `/api/v1`
 {
     "success": true,
     "data": {
-        "token": "eyJhbGciOiJIUzI1NiIs...",
-        "expiresAt": "2024-01-02T00:00:00Z",
-        "user": {
-            "id": "user_123",
-            "email": "user@example.com",
-            "name": "홍길동"
-        }
+        "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+        "tokenType": "Bearer",
+        "expiresIn": 86400
     }
 }
 ```
@@ -104,24 +102,22 @@ Base URL: `/api/v1`
 ### GET /auth/me
 현재 사용자 정보
 
-**Implementation:** See `src/auth/auth.controller.ts` and `src/user/user.service.ts`
-
 **Response** `200 OK`
 ```json
 {
     "success": true,
     "data": {
-        "id": "user_123",
+        "id": "507f1f77bcf86cd799439011",
         "email": "user@example.com",
         "name": "홍길동",
         "settings": {
-            "planningDay": "SUNDAY",
-            "reviewDay": "SATURDAY",
-            "weekStartDay": "MONDAY",
+            "planningDay": 0,
+            "reviewDay": 6,
+            "defaultReminderMinutes": 30,
             "timezone": "Asia/Seoul",
-            "defaultReminderMinutes": 10,
             "notificationEnabled": true
-        }
+        },
+        "createdAt": "2025-01-01T00:00:00.000Z"
     }
 }
 ```
@@ -129,16 +125,34 @@ Base URL: `/api/v1`
 ### PUT /auth/settings
 사용자 설정 수정
 
-**Implementation:** See `src/user/user.service.ts`
-
 **Request**
 ```json
 {
-    "planningDay": "SUNDAY",
-    "reviewDay": "SATURDAY",
+    "planningDay": 0,
+    "reviewDay": 6,
     "timezone": "Asia/Seoul",
     "defaultReminderMinutes": 15,
     "notificationEnabled": true
+}
+```
+
+**Response** `200 OK`
+```json
+{
+    "success": true,
+    "data": {
+        "id": "507f1f77bcf86cd799439011",
+        "email": "user@example.com",
+        "name": "홍길동",
+        "settings": {
+            "planningDay": 0,
+            "reviewDay": 6,
+            "defaultReminderMinutes": 15,
+            "timezone": "Asia/Seoul",
+            "notificationEnabled": true
+        },
+        "createdAt": "2025-01-01T00:00:00.000Z"
+    }
 }
 ```
 
@@ -146,134 +160,13 @@ Base URL: `/api/v1`
 
 ## 2. Weekly Plans
 
-### GET /plans/current
-현재 주 계획 조회. 없으면 자동 생성.
-
-**Implementation:** See `src/plan/plan.controller.ts` and `src/plan/plan.service.ts`
-
-**Response** `200 OK`
-```json
-{
-    "success": true,
-    "data": {
-        "id": "plan_123",
-        "weekStartDate": "2024-01-01",
-        "weekEndDate": "2024-01-07",
-        "status": "DRAFT",
-        "dailyPlans": {
-            "2024-01-01": {
-                "date": "2024-01-01",
-                "dayOfWeek": "MONDAY",
-                "tasks": [],
-                "memo": null
-            },
-            // ... 나머지 요일
-        },
-        "confirmedAt": null,
-        "createdAt": "2024-01-01T00:00:00Z"
-    }
-}
-```
-
-### GET /plans/{planId}
-특정 주간 계획 조회
-
-**Implementation:** See `src/plan/plan.controller.ts` and `src/plan/plan.service.ts`
-
-### GET /plans
-주간 계획 목록 조회
-
-**Implementation:** See `src/plan/plan.controller.ts` and `src/plan/plan.service.ts`
-
-**Query Parameters**
-| Param | Type | Description |
-|-------|------|-------------|
-| `page` | int | 페이지 번호 (0부터) |
-| `size` | int | 페이지 크기 (default: 10) |
-| `status` | string | 상태 필터 (DRAFT, CONFIRMED, COMPLETED) |
-
-**Response** `200 OK`
-```json
-{
-    "success": true,
-    "data": {
-        "content": [ ... ],
-        "page": 0,
-        "size": 10,
-        "totalElements": 25,
-        "totalPages": 3
-    }
-}
-```
-
-### PUT /plans/{planId}/confirm
-계획 확정. 이후 변경사항 추적 시작.
-
-**Implementation:** See `src/plan/plan.controller.ts` and `src/plan/plan.service.ts`
-
-**Response** `200 OK`
-```json
-{
-    "success": true,
-    "data": {
-        "id": "plan_123",
-        "status": "CONFIRMED",
-        "confirmedAt": "2024-01-01T09:00:00Z",
-        // ...
-    }
-}
-```
-
-**Error**
-- `ALREADY_CONFIRMED`: 이미 확정된 계획
-
-### PUT /plans/{planId}/memo
-일일 메모 수정
-
-**Implementation:** See `src/plan/plan.controller.ts` and `src/plan/plan.service.ts`
+### POST /plans
+주간 계획 생성
 
 **Request**
 ```json
 {
-    "date": "2024-01-01",
-    "memo": "오늘은 집중해서 일하기"
-}
-```
-
----
-
-## 3. Tasks
-
-### GET /plans/{planId}/tasks
-주간 계획의 전체 Task 조회
-
-**Implementation:** See `src/plan/plan.controller.ts` and `src/plan/plan.service.ts`
-
-**Query Parameters**
-| Param | Type | Description |
-|-------|------|-------------|
-| `date` | LocalDate | 특정 날짜 필터 |
-| `status` | string | 상태 필터 |
-
-### POST /plans/{planId}/tasks
-Task 추가
-
-**Implementation:** See `src/plan/plan.controller.ts` and `src/plan/plan.service.ts`
-
-**Request**
-```json
-{
-    "date": "2024-01-01",
-    "title": "프로젝트 미팅",
-    "description": "Q1 계획 논의",
-    "scheduledTime": "14:00",
-    "estimatedMinutes": 60,
-    "reminder": {
-        "enabled": true,
-        "minutesBefore": 10
-    },
-    "priority": "HIGH",
-    "tags": ["work", "meeting"]
+    "weekStartDate": "2025-01-12"
 }
 ```
 
@@ -282,90 +175,230 @@ Task 추가
 {
     "success": true,
     "data": {
-        "id": "task_456",
-        "title": "프로젝트 미팅",
-        "status": "PENDING",
-        "createdAt": "2024-01-01T00:00:00Z",
-        // ...
+        "id": "507f1f77bcf86cd799439011",
+        "userId": "507f1f77bcf86cd799439012",
+        "weekStartDate": "2025-01-12",
+        "weekEndDate": "2025-01-18",
+        "status": "DRAFT",
+        "dailyPlans": [
+            {
+                "date": "2025-01-12",
+                "tasks": []
+            },
+            // ... 7일치
+        ],
+        "confirmedAt": null,
+        "createdAt": "2025-01-12T00:00:00.000Z",
+        "updatedAt": "2025-01-12T00:00:00.000Z"
     }
 }
 ```
 
-### PUT /tasks/{taskId}
-Task 수정
+**Error**
+- `400`: `Weekly plan already exists for week starting {date}` - 해당 주 계획이 이미 존재
 
-**Implementation:** See `src/plan/plan.controller.ts` and `src/plan/plan.service.ts`
+### GET /plans/current
+현재 주 계획 조회. 없으면 자동 생성.
+
+**Response** `200 OK`
+- POST /plans 응답과 동일한 형태
+
+### GET /plans/by-date
+날짜로 주간 계획 조회
+
+**Query Parameters**
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `date` | string | Yes | 조회할 날짜 (yyyy-MM-dd) |
+
+**Response** `200 OK`
+- 해당 날짜를 포함하는 주간 계획 반환
+- 없으면 `data: null`
+
+### GET /plans/{planId}
+특정 주간 계획 조회
+
+**Response** `200 OK`
+- POST /plans 응답과 동일한 형태
+
+### GET /plans
+주간 계획 목록 조회
+
+**Query Parameters**
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `page` | int | 0 | 페이지 번호 (0부터) |
+| `size` | int | 10 | 페이지 크기 |
+| `status` | string | - | 상태 필터 (DRAFT, CONFIRMED) |
+
+**Response** `200 OK`
+```json
+{
+    "success": true,
+    "data": {
+        "content": [ /* WeeklyPlan 배열 */ ],
+        "page": 0,
+        "size": 10,
+        "totalElements": 25,
+        "totalPages": 3
+    }
+}
+```
+
+### POST /plans/{planId}/confirm
+계획 확정. 이후 변경사항 추적 시작.
+
+**Response** `201 Created`
+```json
+{
+    "success": true,
+    "data": {
+        "id": "507f1f77bcf86cd799439011",
+        "status": "CONFIRMED",
+        "confirmedAt": "2025-01-12T09:00:00.000Z",
+        // ... 나머지 필드
+    }
+}
+```
+
+**Error**
+- `400`: `Plan is already confirmed` - 이미 확정된 계획
+
+### PUT /plans/{planId}/memo
+일일 메모 수정
+
+**Request**
+```json
+{
+    "date": "2025-01-12",
+    "memo": "오늘은 집중해서 일하기"
+}
+```
+
+**Response** `200 OK`
+- WeeklyPlan 전체 반환
+
+---
+
+## 3. Tasks
+
+### POST /plans/{planId}/tasks
+Task 추가
+
+**Query Parameters**
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `date` | string | Yes | Task를 추가할 날짜 (yyyy-MM-dd) |
+
+**Request**
+```json
+{
+    "title": "프로젝트 미팅",
+    "description": "Q1 계획 논의",
+    "scheduledTime": "14:00",
+    "reminderMinutesBefore": 30,
+    "priority": "HIGH",
+    "tags": ["work", "meeting"]
+}
+```
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `title` | string | Yes | - | Task 제목 |
+| `description` | string | No | - | 상세 설명 |
+| `scheduledTime` | string | No | - | 예정 시간 (HH:mm) |
+| `reminderMinutesBefore` | number | No | 30 | 리마인더 (몇 분 전) |
+| `priority` | string | No | MEDIUM | 우선순위 (LOW, MEDIUM, HIGH) |
+| `tags` | string[] | No | [] | 태그 목록 |
+
+**Response** `201 Created`
+```json
+{
+    "success": true,
+    "data": {
+        "id": "507f1f77bcf86cd799439011",
+        "title": "프로젝트 미팅",
+        "description": "Q1 계획 논의",
+        "status": "PENDING",
+        "priority": "HIGH",
+        "scheduledTime": "14:00",
+        "reminderMinutesBefore": 30,
+        "tags": ["work", "meeting"],
+        "createdAt": "2025-01-12T00:00:00.000Z",
+        "completedAt": null
+    }
+}
+```
+
+**Error**
+- `400`: `Date {date} is not in this weekly plan` - 주간 계획 범위 외 날짜
+
+### PUT /plans/{planId}/tasks/{taskId}
+Task 수정
 
 **Request**
 ```json
 {
     "title": "프로젝트 미팅 (변경)",
+    "description": "업데이트된 설명",
+    "status": "COMPLETED",
+    "priority": "MEDIUM",
     "scheduledTime": "15:00",
+    "reminderMinutesBefore": 15,
+    "tags": ["updated", "tags"],
     "reason": "시간 변경됨"
 }
 ```
 
-**Note**: `reason`은 선택. CONFIRMED 상태일 때 ChangeLog에 기록됨.
+모든 필드는 선택사항. `reason`은 CONFIRMED 상태일 때 ChangeLog에 기록됨.
 
-### PUT /tasks/{taskId}/status
-Task 상태 변경
+**Task Status 값**
+- `PENDING`: 대기 중
+- `IN_PROGRESS`: 진행 중
+- `COMPLETED`: 완료됨
+- `CANCELLED`: 취소됨
+- `POSTPONED`: 연기됨
 
-**Implementation:** See `src/plan/plan.controller.ts` and `src/plan/plan.service.ts`
+**Response** `200 OK`
+- Task 객체 반환
 
-**Request**
-```json
-{
-    "status": "COMPLETED",
-    "reason": null
-}
-```
+### DELETE /plans/{planId}/tasks/{taskId}
+Task 삭제
+
+**Query Parameters**
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `reason` | string | No | 삭제 사유 (ChangeLog 기록용) |
 
 **Response** `200 OK`
 ```json
 {
     "success": true,
-    "data": {
-        "id": "task_456",
-        "status": "COMPLETED",
-        "completedAt": "2024-01-01T15:30:00Z"
-    }
+    "data": null
 }
 ```
 
-### PUT /tasks/{taskId}/move
+### POST /plans/{planId}/tasks/{taskId}/move
 Task를 다른 날로 이동
-
-**Implementation:** See `src/plan/plan.controller.ts` and `src/plan/plan.service.ts:265` (Task move logic)
 
 **Request**
 ```json
 {
-    "targetDate": "2024-01-02",
+    "targetDate": "2025-01-13",
     "reason": "오늘 시간 부족"
 }
 ```
 
-**Response** `200 OK`
-```json
-{
-    "success": true,
-    "data": {
-        "id": "task_456",
-        "status": "POSTPONED",
-        "movedTo": "2024-01-02"
-    }
-}
-```
+**동작 방식**
+1. 원본 Task의 상태를 `POSTPONED`로 변경
+2. 대상 날짜에 새 Task 생성 (`PENDING` 상태)
+3. ChangeLog 자동 기록 (CONFIRMED 상태일 때)
 
-### DELETE /tasks/{taskId}
-Task 삭제
+**Response** `201 Created`
+- 새로 생성된 Task 객체 반환
 
-**Implementation:** See `src/plan/plan.controller.ts` and `src/plan/plan.service.ts`
-
-**Query Parameters**
-| Param | Type | Description |
-|-------|------|-------------|
-| `reason` | string | 삭제 사유 (선택) |
+**Error**
+- `400`: `Target date {date} is not in this weekly plan` - 주간 계획 범위 외 날짜
 
 ---
 
@@ -374,15 +407,19 @@ Task 삭제
 ### GET /plans/{planId}/changes
 변경 이력 조회
 
-**Implementation:** See `src/changelog/changelog.controller.ts` and `src/changelog/changelog.service.ts:13`
-
 **Query Parameters**
-| Param | Type | Description |
-|-------|------|-------------|
-| `date` | LocalDate | 특정 날짜 필터 |
-| `type` | string | 변경 유형 필터 |
-| `page` | int | 페이지 번호 |
-| `size` | int | 페이지 크기 |
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `date` | string | - | 특정 날짜 필터 |
+| `type` | string | - | 변경 유형 필터 |
+| `page` | int | 0 | 페이지 번호 |
+| `size` | int | 20 | 페이지 크기 |
+
+**Change Types**
+- `TASK_CREATED`: Task 추가됨
+- `TASK_UPDATED`: Task 수정됨
+- `TASK_DELETED`: Task 삭제됨
+- `MOVED_TO_ANOTHER_DAY`: 다른 날로 이동됨
 
 **Response** `200 OK`
 ```json
@@ -391,25 +428,28 @@ Task 삭제
     "data": {
         "content": [
             {
-                "id": "log_789",
-                "targetDate": "2024-01-01",
-                "taskId": "task_456",
+                "id": "507f1f77bcf86cd799439011",
+                "weeklyPlanId": "507f1f77bcf86cd799439012",
+                "userId": "507f1f77bcf86cd799439013",
+                "targetDate": "2025-01-12",
+                "taskId": "507f1f77bcf86cd799439014",
                 "taskTitle": "프로젝트 미팅",
-                "changeType": "TIME_CHANGED",
+                "changeType": "TASK_UPDATED",
                 "changes": [
                     {
                         "field": "scheduledTime",
-                        "previousValue": "14:00",
+                        "oldValue": "14:00",
                         "newValue": "15:00"
                     }
                 ],
                 "reason": "시간 변경됨",
-                "changedAt": "2024-01-01T10:00:00Z"
+                "createdAt": "2025-01-12T10:00:00.000Z"
             }
         ],
         "page": 0,
         "size": 20,
-        "totalElements": 5
+        "totalElements": 5,
+        "totalPages": 1
     }
 }
 ```
@@ -418,60 +458,39 @@ Task 삭제
 
 ## 5. Weekly Review
 
-### GET /reviews/current
-현재 주 회고 데이터
-
-**Implementation:** See `src/review/review.controller.ts` and `src/review/review.service.ts`
+### GET /reviews/{planId}
+주간 회고 데이터 조회
 
 **Response** `200 OK`
 ```json
 {
     "success": true,
     "data": {
-        "weeklyPlanId": "plan_123",
-        "weekStartDate": "2024-01-01",
-        "weekEndDate": "2024-01-07",
+        "weeklyPlanId": "507f1f77bcf86cd799439011",
+        "weekStartDate": "2025-01-12",
+        "weekEndDate": "2025-01-18",
         "statistics": {
-            "totalPlanned": 20,
-            "completed": 15,
-            "cancelled": 2,
-            "postponed": 3,
-            "addedAfterConfirm": 5,
-            "completionRate": 75.0,
-            "totalChanges": 12,
-            "changesByType": {
-                "STATUS_CHANGED": 15,
-                "TIME_CHANGED": 3,
-                "MOVED_TO_ANOTHER_DAY": 3,
-                "TASK_CREATED": 5,
-                "TASK_DELETED": 1
+            "totalTasks": 20,
+            "completedTasks": 15,
+            "cancelledTasks": 2,
+            "postponedTasks": 3,
+            "completionRate": 75.0
+        },
+        "dailyBreakdown": [
+            {
+                "date": "2025-01-12",
+                "totalTasks": 5,
+                "completedTasks": 4,
+                "completionRate": 80.0
             }
-        },
-        "dailyBreakdown": {
-            "2024-01-01": {
-                "date": "2024-01-01",
-                "dayOfWeek": "MONDAY",
-                "planned": 5,
-                "completed": 4,
-                "completionRate": 80.0,
-                "changesCount": 3
-            },
             // ... 나머지 요일
-        },
-        "changeHistory": [
-            // ChangeLog 목록 (최신순)
         ],
-        "generatedAt": "2024-01-06T18:00:00Z"
+        "changeHistory": [
+            // ChangeLog 목록
+        ]
     }
 }
 ```
-
-### GET /reviews/{weekStartDate}
-특정 주 회고 조회
-
-**Implementation:** See `src/review/review.controller.ts` and `src/review/review.service.ts`
-
-**Path Parameter**: `weekStartDate` (yyyy-MM-dd)
 
 ---
 
@@ -480,14 +499,12 @@ Task 삭제
 ### GET /notifications
 알림 목록 조회
 
-**Implementation:** See `src/notification/notification.controller.ts` and `src/notification/notification.service.ts`
-
 **Query Parameters**
-| Param | Type | Description |
-|-------|------|-------------|
-| `unreadOnly` | boolean | 읽지 않은 것만 (default: false) |
-| `page` | int | 페이지 번호 |
-| `size` | int | 페이지 크기 |
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `unreadOnly` | boolean | false | 읽지 않은 것만 |
+| `page` | int | 0 | 페이지 번호 |
+| `size` | int | 20 | 페이지 크기 |
 
 **Response** `200 OK`
 ```json
@@ -496,27 +513,33 @@ Task 삭제
     "data": {
         "content": [
             {
-                "id": "notif_123",
+                "id": "507f1f77bcf86cd799439011",
+                "userId": "507f1f77bcf86cd799439012",
                 "type": "TASK_REMINDER",
-                "title": "⏰ 할 일 알림",
+                "title": "할 일 알림",
                 "message": "프로젝트 미팅 - 14:00",
-                "relatedTaskId": "task_456",
-                "relatedDate": "2024-01-01",
+                "relatedTaskId": "507f1f77bcf86cd799439013",
+                "relatedDate": "2025-01-12",
                 "isRead": false,
-                "createdAt": "2024-01-01T13:50:00Z"
+                "createdAt": "2025-01-12T13:50:00.000Z"
             }
         ],
         "page": 0,
         "size": 20,
-        "totalElements": 5
+        "totalElements": 5,
+        "totalPages": 1
     }
 }
 ```
 
+**Notification Types**
+- `TASK_REMINDER`: Task 리마인더
+- `DAILY_SUMMARY`: 일일 할 일 요약
+- `PLANNING_REMINDER`: 계획 수립 알림
+- `REVIEW_REMINDER`: 회고 알림
+
 ### GET /notifications/unread/count
 읽지 않은 알림 수
-
-**Implementation:** See `src/notification/notification.controller.ts` and `src/notification/notification.service.ts`
 
 **Response** `200 OK`
 ```json
@@ -531,12 +554,12 @@ Task 삭제
 ### PUT /notifications/{notificationId}/read
 알림 읽음 처리
 
-**Implementation:** See `src/notification/notification.controller.ts` and `src/notification/notification.service.ts`
+**Response** `200 OK`
 
 ### PUT /notifications/read-all
 전체 알림 읽음 처리
 
-**Implementation:** See `src/notification/notification.controller.ts` and `src/notification/notification.service.ts`
+**Response** `200 OK`
 
 ---
 
@@ -545,35 +568,30 @@ Task 삭제
 ### GET /today
 오늘 할 일 조회 (현재 주 계획에서 오늘 날짜)
 
-**Implementation:** See `src/plan/plan.controller.ts` and `src/plan/plan.service.ts`
-
 **Response** `200 OK`
 ```json
 {
     "success": true,
     "data": {
-        "date": "2024-01-01",
-        "dayOfWeek": "MONDAY",
-        "planId": "plan_123",
-        "planStatus": "CONFIRMED",
+        "date": "2025-01-12",
+        "weeklyPlan": {
+            // WeeklyPlan 객체 (해당 주 계획이 있는 경우)
+        },
         "tasks": [
             {
-                "id": "task_456",
+                "id": "507f1f77bcf86cd799439011",
                 "title": "프로젝트 미팅",
                 "scheduledTime": "14:00",
                 "status": "PENDING",
-                "priority": "HIGH"
+                "priority": "HIGH",
+                // ... 나머지 Task 필드
             }
-        ],
-        "memo": "오늘은 집중해서 일하기",
-        "statistics": {
-            "total": 5,
-            "completed": 2,
-            "remaining": 3
-        }
+        ]
     }
 }
 ```
+
+주간 계획이 없으면 `weeklyPlan`은 없고 `tasks`는 빈 배열.
 
 ---
 
@@ -581,10 +599,8 @@ Task 삭제
 
 - [Domain Model](./domain-model.md) - Entity definitions and schemas
 - [Business Rules](./business-rules.md) - Business logic and validation rules
-- [Backend Integration Guide](./backend-integration-guide.md) - Implementation status and testing
-- [Development Workflow](./development-workflow.md) - Development best practices
-- [README](./README.md) - Documentation index
+- [Backend API Reference](../docs-internal/API_REFERENCE.md) - 백엔드 상세 API 문서
 
 ---
 
-**Last Updated:** 2024-12-29
+**Last Updated:** 2025-01-13
