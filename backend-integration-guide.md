@@ -1,7 +1,7 @@
 # Backend Integration Guide
 
 **Version:** 2.0
-**Last Updated:** 2025-01-13
+**Last Updated:** 2026-01-14
 **Target Audience:** Frontend Developers
 
 This guide documents the backend API integration requirements and current implementation status.
@@ -136,6 +136,38 @@ All responses use this format:
 
 ---
 
+## Frontend Data Normalization
+
+The frontend normalizes backend response data to handle format differences:
+
+### dailyPlans Array to Object Conversion
+
+Backend returns `dailyPlans` as an array, but frontend expects an object (Record):
+
+```typescript
+// Backend response (array)
+dailyPlans: [
+  { date: '2026-01-12', tasks: [] },
+  { date: '2026-01-13', tasks: [...] },
+]
+
+// Frontend expected format (object)
+dailyPlans: {
+  '2026-01-12': { date: '...', tasks: [] },
+  '2026-01-13': { date: '...', tasks: [...] },
+}
+```
+
+**Implementation:** See `normalizeDailyPlans()` in `src/api/plans.ts`
+
+### Review dailyBreakdown Conversion
+
+Same pattern applies to `dailyBreakdown` in review responses.
+
+**Implementation:** See `normalizeReview()` in `src/api/reviews.ts`
+
+---
+
 ## Common Integration Issues
 
 ### Issue 1: "Weekly plan already exists" Error
@@ -163,6 +195,17 @@ All responses use this format:
 
 **Fix:** Use `POST /plans/{planId}/tasks?date=2025-01-12`
 
+### Issue 4: Notification Read Method
+
+**Method:** Use PUT (not POST)
+
+```
+PUT /notifications/{notificationId}/read
+PUT /notifications/read-all
+```
+
+See [API Contract](./api-contract.md#6-notifications) for the authoritative specification.
+
 ---
 
 ## Related Documentation
@@ -173,4 +216,4 @@ All responses use this format:
 
 ---
 
-**Last Updated:** 2025-01-13
+**Last Updated:** 2026-01-14
