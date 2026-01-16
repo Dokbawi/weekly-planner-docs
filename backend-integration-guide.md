@@ -31,8 +31,8 @@ This guide documents the backend API integration requirements and current implem
 - `GET /reviews/{planId}` - Get weekly review
 - `GET /notifications` - List notifications
 - `GET /notifications/unread/count` - Get unread count
-- `PUT /notifications/{notificationId}/read` - Mark as read
-- `PUT /notifications/read-all` - Mark all as read
+- `POST /notifications/{notificationId}/read` - Mark as read
+- `POST /notifications/read-all` - Mark all as read
 - `GET /today` - Get today's tasks
 
 ---
