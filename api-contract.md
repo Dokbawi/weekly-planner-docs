@@ -551,15 +551,15 @@ Task를 다른 날로 이동
 }
 ```
 
-### POST /notifications/{notificationId}/read
+### PUT /notifications/{notificationId}/read
 알림 읽음 처리
 
-**Response** `201 Created`
+**Response** `200 OK`
 
-### POST /notifications/read-all
+### PUT /notifications/read-all
 전체 알림 읽음 처리
 
-**Response** `201 Created`
+**Response** `200 OK`
 
 ---
 
