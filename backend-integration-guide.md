@@ -1,7 +1,7 @@
 # Backend Integration Guide
 
-**Version:** 2.0
-**Last Updated:** 2026-01-14
+**Version:** 2.1
+**Last Updated:** 2026-01-16
 **Target Audience:** Frontend Developers
 
 This guide documents the backend API integration requirements and current implementation status.
@@ -197,11 +197,30 @@ Same pattern applies to `dailyBreakdown` in review responses.
 
 ### Issue 4: Notification Read Method
 
-**Method:** Use PUT (not POST)
+**API Contract:** PUT method (per api-contract.md)
 
 ```
 PUT /notifications/{notificationId}/read
 PUT /notifications/read-all
+```
+
+**Frontend Implementation:** PUT first, POST fallback
+
+The frontend tries PUT first (per spec), but falls back to POST if the backend returns 404 or 405. This handles cases where backend implementation differs from spec.
+
+```typescript
+// src/api/notifications.ts
+markAsRead: async (notificationId: string): Promise<void> => {
+  try {
+    await apiClient.put(`/notifications/${notificationId}/read`)
+  } catch (error: any) {
+    if (error?.response?.status === 404 || error?.response?.status === 405) {
+      await apiClient.post(`/notifications/${notificationId}/read`)
+    } else {
+      throw error
+    }
+  }
+}
 ```
 
 See [API Contract](./api-contract.md#6-notifications) for the authoritative specification.
@@ -216,4 +235,4 @@ See [API Contract](./api-contract.md#6-notifications) for the authoritative spec
 
 ---
 
-**Last Updated:** 2026-01-14
+**Last Updated:** 2026-01-16
