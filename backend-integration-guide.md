@@ -1,10 +1,24 @@
 # Backend Integration Guide
 
 **Version:** 2.1
-**Last Updated:** 2026-01-16
+**Last Updated:** 2026-01-19
 **Target Audience:** Frontend Developers
 
 This guide documents the backend API integration requirements and current implementation status.
+
+---
+
+## Deployment
+
+### Backend
+- **Platform:** GCP Cloud Run
+- **Region:** asia-northeast3 (Seoul)
+- **CI/CD:** GitHub Actions (auto-deploy on push to main)
+- **API URL:** `https://weekly-planner-backend-xxxxx.asia-northeast3.run.app`
+
+### Database
+- **Platform:** MongoDB Atlas (M0 Free Tier)
+- **Region:** Shared cluster
 
 ---
 
@@ -31,8 +45,8 @@ This guide documents the backend API integration requirements and current implem
 - `GET /reviews/{planId}` - Get weekly review
 - `GET /notifications` - List notifications
 - `GET /notifications/unread/count` - Get unread count
-- `POST /notifications/{notificationId}/read` - Mark as read
-- `POST /notifications/read-all` - Mark all as read
+- `PUT /notifications/{notificationId}/read` - Mark as read
+- `PUT /notifications/read-all` - Mark all as read
 - `GET /today` - Get today's tasks
 
 ---
@@ -197,33 +211,14 @@ Same pattern applies to `dailyBreakdown` in review responses.
 
 ### Issue 4: Notification Read Method
 
-**API Contract:** PUT method (per api-contract.md)
+**Correct Method:** PUT (REST convention for state changes)
 
 ```
 PUT /notifications/{notificationId}/read
 PUT /notifications/read-all
 ```
 
-**Frontend Implementation:** PUT first, POST fallback
-
-The frontend tries PUT first (per spec), but falls back to POST if the backend returns 404 or 405. This handles cases where backend implementation differs from spec.
-
-```typescript
-// src/api/notifications.ts
-markAsRead: async (notificationId: string): Promise<void> => {
-  try {
-    await apiClient.put(`/notifications/${notificationId}/read`)
-  } catch (error: any) {
-    if (error?.response?.status === 404 || error?.response?.status === 405) {
-      await apiClient.post(`/notifications/${notificationId}/read`)
-    } else {
-      throw error
-    }
-  }
-}
-```
-
-See [API Contract](./api-contract.md#6-notifications) for the authoritative specification.
+The backend uses PUT method as it follows REST conventions for state changes (idempotent operations).
 
 ---
 
@@ -235,4 +230,4 @@ See [API Contract](./api-contract.md#6-notifications) for the authoritative spec
 
 ---
 
-**Last Updated:** 2026-01-16
+**Last Updated:** 2026-01-19

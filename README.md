@@ -1,6 +1,6 @@
 # Weekly Planner - Documentation Index
 
-**Last Updated:** 2025-01-13
+**Last Updated:** 2026-01-19
 
 Weekly Planner 프로젝트의 공유 문서 저장소입니다.
 
@@ -24,6 +24,17 @@ Weekly Planner 프로젝트의 공유 문서 저장소입니다.
 
 ---
 
+## 인프라
+
+| 서비스 | 플랫폼 | 비고 |
+|--------|--------|------|
+| Backend API | GCP Cloud Run | asia-northeast3 (Seoul) |
+| Database | MongoDB Atlas | M0 Free Tier |
+| Frontend | Firebase Hosting / Vercel | 예정 |
+| CI/CD | GitHub Actions | main 브랜치 push 시 자동 배포 |
+
+---
+
 ## 기술 스택
 
 ### Backend
@@ -39,9 +50,9 @@ Weekly Planner 프로젝트의 공유 문서 저장소입니다.
 
 ---
 
-## 빠른 시작
+## 로컬 개발
 
-### API 서버
+### Backend
 ```bash
 cd weekly-planner-backend
 npm install
@@ -49,6 +60,14 @@ npm run start:dev
 ```
 - API: http://localhost:3000
 - Swagger: http://localhost:3000/api-docs
+
+### Frontend
+```bash
+cd weekly-planner-frontend
+npm install
+npm run dev
+```
+- App: http://localhost:5173
 
 ---
 
@@ -77,7 +96,3 @@ git push
 
 - [Backend Repository](https://github.com/Dokbawi/weekly-planner-backend)
 - [Frontend Repository](https://github.com/Dokbawi/weekly-planner-frontend)
-
----
-
-**Last Updated:** 2025-01-13
