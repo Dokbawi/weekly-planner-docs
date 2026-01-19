@@ -21,6 +21,7 @@ Weekly Planner 프로젝트의 공유 문서 저장소입니다.
 | 문서 | 설명 |
 |------|------|
 | [Backend Integration Guide](./backend-integration-guide.md) | 프론트엔드 개발자를 위한 API 연동 가이드 |
+| [Backend API Requests](./backend-api-requests.md) | 백엔드 미구현 API 요청 목록 |
 
 ---
 
