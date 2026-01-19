@@ -1,99 +1,74 @@
-# Weekly Planner - Documentation Index
+# Weekly Planner - Shared Documentation
 
 **Last Updated:** 2026-01-19
 
-Weekly Planner 프로젝트의 공유 문서 저장소입니다.
+프론트엔드/백엔드 공유 문서 저장소 (Git Submodule)
 
 ---
 
-## 문서 구조
+## 문서 목록
 
-### 핵심 문서
+### API 및 도메인
+
+| 문서 | 설명 | 대상 |
+|------|------|------|
+| [api-contract.md](./api-contract.md) | REST API 명세 | Frontend/Backend |
+| [domain-model.md](./domain-model.md) | 엔티티 정의 및 스키마 | Frontend/Backend |
+| [business-rules.md](./business-rules.md) | 비즈니스 로직 규칙 | Frontend/Backend |
+
+### 프론트엔드
 
 | 문서 | 설명 |
 |------|------|
-| [API Contract](./api-contract.md) | REST API 명세 |
-| [Domain Model](./domain-model.md) | 엔티티 정의 및 스키마 |
-| [Business Rules](./business-rules.md) | 비즈니스 로직 규칙 |
+| [backend-integration-guide.md](./backend-integration-guide.md) | API 연동 가이드 |
+| [ui-spec.md](./ui-spec.md) | UI/UX 명세 |
+| [backend-api-requests.md](./backend-api-requests.md) | 백엔드 미구현 API 요청 목록 |
 
 ### 개발 가이드
 
 | 문서 | 설명 |
 |------|------|
-| [Backend Integration Guide](./backend-integration-guide.md) | 프론트엔드 개발자를 위한 API 연동 가이드 |
-| [Backend API Requests](./backend-api-requests.md) | 백엔드 미구현 API 요청 목록 |
+| [development-workflow.md](./development-workflow.md) | Git Submodule 관리, 커밋 컨벤션 |
 
 ---
 
-## 인프라
+## 인프라 현황
 
-| 서비스 | 플랫폼 | 비고 |
+| 서비스 | 플랫폼 | 상태 |
 |--------|--------|------|
-| Backend API | GCP Cloud Run | asia-northeast3 (Seoul) |
-| Database | MongoDB Atlas | M0 Free Tier |
-| Frontend | Firebase Hosting / Vercel | 예정 |
-| CI/CD | GitHub Actions | main 브랜치 push 시 자동 배포 |
+| Backend API | GCP Cloud Run | 운영 중 |
+| Database | MongoDB Atlas (M0) | 운영 중 |
+| Frontend | (예정) | - |
+| CI/CD | GitHub Actions | 자동 배포 |
 
 ---
 
-## 기술 스택
+## Submodule 사용법
 
-### Backend
-- **Framework:** NestJS 10.x
-- **Language:** TypeScript 5.x
-- **Database:** MongoDB + Mongoose
-- **Auth:** JWT (Passport)
-
-### Frontend
-- **Framework:** React + TypeScript
-- **State Management:** Zustand
-- **UI:** shadcn/ui
-
----
-
-## 로컬 개발
-
-### Backend
+### 문서 수정
 ```bash
-cd weekly-planner-backend
-npm install
-npm run start:dev
-```
-- API: http://localhost:3000
-- Swagger: http://localhost:3000/api-docs
-
-### Frontend
-```bash
-cd weekly-planner-frontend
-npm install
-npm run dev
-```
-- App: http://localhost:5173
-
----
-
-## 문서 업데이트 가이드
-
-이 저장소는 git submodule로 frontend/backend 레포에서 공유됩니다.
-
-### 문서 수정 후
-```bash
-# docs 폴더에서
 cd docs/
-git add .
-git commit -m "docs: update API contract"
-git push
+git checkout main && git pull
+# 문서 수정
+git add . && git commit -m "docs: ..." && git push
+```
 
-# 상위 레포에서
+### 상위 레포 업데이트
+```bash
 cd ..
 git add docs
 git commit -m "chore: update docs submodule"
 git push
 ```
 
+### 최신 문서 가져오기
+```bash
+git submodule update --remote docs
+```
+
 ---
 
-## Related
+## 관련 저장소
 
-- [Backend Repository](https://github.com/Dokbawi/weekly-planner-backend)
-- [Frontend Repository](https://github.com/Dokbawi/weekly-planner-frontend)
+- [Backend](https://github.com/Dokbawi/weekly-planner-backend)
+- [Frontend](https://github.com/Dokbawi/weekly-planner-frontend)
