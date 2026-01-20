@@ -1,4 +1,4 @@
-# Weekly Planner - Shared Documentation
+# Weekly Planner - Documentation
 
 **Last Updated:** 2026-01-20
 
@@ -77,24 +77,20 @@
 
 ## Submodule 사용법
 
-### 문서 수정
 ```bash
+# 문서 수정
 cd docs/
 git checkout main && git pull
-# 문서 수정
+# 수정 후
 git add . && git commit -m "docs: ..." && git push
-```
 
-### 상위 레포 업데이트
-```bash
+# 상위 레포 업데이트
 cd ..
 git add docs
 git commit -m "chore: update docs submodule"
 git push
-```
 
-### 최신 문서 가져오기
-```bash
+# 최신 문서 가져오기
 git submodule update --remote docs
 ```
 

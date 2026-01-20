@@ -1,6 +1,6 @@
 # Development Workflow Guide
 
-**Last Updated:** 2025-01-13
+**Last Updated:** 2026-01-20
 
 ---
 
@@ -21,17 +21,13 @@ weekly-planner/
 
 ### 문서 수정 시
 ```bash
-# 1. docs 폴더로 이동
 cd docs/
-git checkout main
-git pull
-
-# 2. 문서 수정 후 커밋
-git add .
-git commit -m "docs: update API contract"
+git checkout main && git pull
+# 문서 수정 후
+git add . && git commit -m "docs: update API contract"
 git push
 
-# 3. 상위 레포로 돌아가서 submodule 참조 업데이트
+# 상위 레포 업데이트
 cd ..
 git add docs
 git commit -m "chore: update docs submodule"
@@ -42,30 +38,6 @@ git push
 ```bash
 git pull
 git submodule update --remote docs
-```
-
----
-
-## 개발 환경 설정
-
-### Backend
-```bash
-# 의존성 설치
-npm install
-
-# 환경 변수 설정 (.env)
-MONGODB_URI=mongodb://localhost:27017/weekly_planner
-JWT_SECRET=your-secret-key
-
-# 개발 서버 실행
-npm run start:dev
-```
-
-### 테스트
-```bash
-npm run test          # 유닛 테스트
-npm run test:e2e      # E2E 테스트
-npm run test:cov      # 커버리지
 ```
 
 ---
@@ -89,13 +61,71 @@ chore: update docs submodule
 
 ---
 
-## Related Documentation
+## CI/CD 파이프라인
 
-- [API Contract](./api-contract.md)
-- [Domain Model](./domain-model.md)
-- [Business Rules](./business-rules.md)
-- [Backend Integration Guide](./backend-integration-guide.md)
+### Backend (GitHub Actions → GCP Cloud Run)
+```yaml
+trigger: push to main branch
+         ↓
+1. Checkout + Node.js 설정
+2. npm install + npm run build
+3. Docker 빌드 (Multi-stage)
+4. GCP Artifact Registry 푸시
+5. Cloud Run 배포
+```
+
+### Docker Multi-stage 빌드
+```dockerfile
+# Build stage
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+# Production stage
+FROM node:20-alpine
+WORKDIR /app
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+CMD ["node", "dist/main.js"]
+```
 
 ---
 
-**Last Updated:** 2025-01-13
+## 개발 환경 설정
+
+### Frontend
+```bash
+npm install
+npm run dev      # http://localhost:3000
+
+# 환경 변수 (.env)
+VITE_API_URL=http://localhost:8080/api/v1
+```
+
+### Backend
+```bash
+npm install
+npm run start:dev
+
+# 환경 변수 (.env)
+MONGODB_URI=mongodb://localhost:27017/weekly_planner
+JWT_SECRET=your-secret-key
+```
+
+### 테스트
+```bash
+npm run test          # 유닛 테스트
+npm run test:e2e      # E2E 테스트
+npm run test:cov      # 커버리지
+```
+
+---
+
+## 관련 문서
+
+- [API Contract](./api-contract.md)
+- [Domain Model](./domain-model.md)
+- [Portfolio Summary](./portfolio-summary.md)

@@ -1,233 +1,134 @@
 # Backend Integration Guide
 
-**Version:** 2.1
-**Last Updated:** 2026-01-19
-**Target Audience:** Frontend Developers
+**Last Updated:** 2026-01-20
 
-This guide documents the backend API integration requirements and current implementation status.
+프론트엔드 개발자를 위한 백엔드 API 연동 가이드입니다.
 
 ---
 
-## Deployment
+## 배포 환경
 
-### Backend
-- **Platform:** GCP Cloud Run
-- **Region:** asia-northeast3 (Seoul)
-- **CI/CD:** GitHub Actions (auto-deploy on push to main)
-- **API URL:** `https://weekly-planner-backend-xxxxx.asia-northeast3.run.app`
-
-### Database
-- **Platform:** MongoDB Atlas (M0 Free Tier)
-- **Region:** Shared cluster
+| 서비스 | 플랫폼 | 설정 |
+|--------|--------|------|
+| Backend | GCP Cloud Run | 서울 리전, 자동 스케일링 |
+| Database | MongoDB Atlas | M0 무료 티어 |
+| CI/CD | GitHub Actions | main 브랜치 푸시 시 자동 배포 |
 
 ---
 
-## Current API Implementation Status
+## API 현황
 
-### ✅ Fully Implemented
+### 구현 완료
+- `POST /auth/register`, `POST /auth/login`, `GET /auth/me`
+- `GET /plans`, `GET /plans/current`, `GET /plans/{planId}`
+- `POST /plans/{planId}/tasks`, `PUT /plans/{planId}/tasks/{taskId}`
+- `POST /plans/{planId}/tasks/{taskId}/move`
+- `GET /reviews/{planId}`
+- `GET /notifications`, `PUT /notifications/{id}/read`
 
-- `POST /auth/register` - User registration
-- `POST /auth/login` - User authentication
-- `GET /auth/me` - Get current user info
-- `PUT /auth/settings` - Update user settings
-- `POST /plans` - Create weekly plan
-- `GET /plans` - List weekly plans (paginated)
-- `GET /plans/current` - Get current week's plan (auto-create if not exists)
-- `GET /plans/by-date` - Get plan by specific date
-- `GET /plans/{planId}` - Get specific plan
-- `POST /plans/{planId}/confirm` - Confirm plan
-- `PUT /plans/{planId}/memo` - Update daily memo
-- `POST /plans/{planId}/tasks` - Create task (with date query param)
-- `PUT /plans/{planId}/tasks/{taskId}` - Update task
-- `POST /plans/{planId}/tasks/{taskId}/move` - Move task to another day
-- `DELETE /plans/{planId}/tasks/{taskId}` - Delete task
-- `GET /plans/{planId}/changes` - Get change logs
-- `GET /reviews/{planId}` - Get weekly review
-- `GET /notifications` - List notifications
-- `GET /notifications/unread/count` - Get unread count
-- `PUT /notifications/{notificationId}/read` - Mark as read
-- `PUT /notifications/read-all` - Mark all as read
-- `GET /today` - Get today's tasks
+전체 API 목록은 [api-contract.md](./api-contract.md) 참조
 
 ---
 
-## Response Format
-
-### Standard Response Wrapper
-
-All responses use this format:
-
-**Success:**
-```json
-{
-  "success": true,
-  "data": { ... }
-}
-```
-
-**Error:**
-```json
-{
-  "success": false,
-  "error": {
-    "code": "ERROR_CODE",
-    "message": "Human readable message"
-  }
-}
-```
-
-### Paginated Responses
+## 응답 형식
 
 ```json
-{
-  "success": true,
-  "data": {
-    "content": [...],
-    "page": 0,
-    "size": 10,
-    "totalElements": 100,
-    "totalPages": 10
-  }
-}
+// 성공
+{ "success": true, "data": { ... } }
+
+// 실패
+{ "success": false, "error": { "code": "...", "message": "..." } }
+
+// 페이지네이션
+{ "success": true, "data": { "content": [...], "page": 0, "size": 10, "totalElements": 100 } }
 ```
 
 ---
 
-## Key Implementation Details
+## 인증
 
-### Authentication
-
-**Login Response:**
+### 로그인 응답
 ```json
 {
-  "success": true,
-  "data": {
-    "accessToken": "eyJhbGciOiJIUzI1NiIs...",
-    "tokenType": "Bearer",
-    "expiresIn": 86400
-  }
+  "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+  "tokenType": "Bearer",
+  "expiresIn": 86400
 }
 ```
 
-**JWT Claims:**
-- `sub` - User ID
-- `email` - User email
-- `name` - User name
-- `exp` - Expiration timestamp
-- `iat` - Issued at timestamp
+### 요청 헤더
+```
+Authorization: Bearer {accessToken}
+```
 
-### Task Creation
+---
 
-**Request:** `POST /plans/{planId}/tasks?date=2025-01-12`
-```json
+## 주요 API 사용법
+
+### Task 생성
+```
+POST /plans/{planId}/tasks?date=2026-01-20
 {
-  "title": "Task title",
-  "description": "Optional description",
+  "title": "회의 참석",
   "scheduledTime": "14:00",
   "reminderMinutesBefore": 30,
-  "priority": "HIGH",
-  "tags": ["work"]
+  "priority": "HIGH"
 }
 ```
+**주의**: `date`는 query parameter로 전달
 
-**Note:** `date` is passed as a query parameter, not in the request body.
-
-### Task Priority Values
-- `LOW`
-- `MEDIUM`
-- `HIGH`
-
-### Task Status Values
-- `PENDING`
-- `IN_PROGRESS`
-- `COMPLETED`
-- `CANCELLED`
-- `POSTPONED`
-
-### Plan Status Values
-- `DRAFT`
-- `CONFIRMED`
+### Task 이동
+```
+POST /plans/{planId}/tasks/{taskId}/move
+{
+  "targetDate": "2026-01-21",
+  "reason": "시간 부족"
+}
+```
+- 원본 Task는 POSTPONED 상태로 변경
+- 새 날짜에 복사본 생성 (PENDING)
 
 ---
 
-## Frontend Data Normalization
+## 데이터 정규화
 
-The frontend normalizes backend response data to handle format differences:
-
-### dailyPlans Array to Object Conversion
-
-Backend returns `dailyPlans` as an array, but frontend expects an object (Record):
+프론트엔드는 `dailyPlans`를 객체(Record)로 기대하지만, 백엔드는 배열로 반환합니다.
 
 ```typescript
-// Backend response (array)
-dailyPlans: [
-  { date: '2026-01-12', tasks: [] },
-  { date: '2026-01-13', tasks: [...] },
-]
+// 백엔드 응답
+dailyPlans: [{ date: '2026-01-12', tasks: [] }, ...]
 
-// Frontend expected format (object)
-dailyPlans: {
-  '2026-01-12': { date: '...', tasks: [] },
-  '2026-01-13': { date: '...', tasks: [...] },
+// 프론트엔드 기대
+dailyPlans: { '2026-01-12': { date: '...', tasks: [] }, ... }
+
+// 변환 함수
+function normalizeDailyPlans(plans) {
+  return plans.reduce((acc, plan) => ({ ...acc, [plan.date]: plan }), {})
 }
 ```
 
-**Implementation:** See `normalizeDailyPlans()` in `src/api/plans.ts`
-
-### Review dailyBreakdown Conversion
-
-Same pattern applies to `dailyBreakdown` in review responses.
-
-**Implementation:** See `normalizeReview()` in `src/api/reviews.ts`
+**구현 위치**: `src/api/plans.ts`, `src/api/reviews.ts`
 
 ---
 
-## Common Integration Issues
+## 자주 발생하는 문제
 
-### Issue 1: "Weekly plan already exists" Error
+### 1. Task 날짜 불일치
+- **원인**: date가 body에 있음
+- **해결**: `POST /tasks?date=yyyy-MM-dd`
 
-**Symptom:** 400 error when creating a plan
+### 2. 401 Unauthorized
+- **확인**: localStorage의 토큰 존재 여부
+- **확인**: Authorization 헤더 형식 (`Bearer {token}`)
 
-**Cause:** A plan for that week already exists
-
-**Solution:** Use `GET /plans/current` instead of `POST /plans` to get or create the current week's plan.
-
-### Issue 2: 401 Unauthorized
-
-**Symptom:** API calls fail with 401
-
-**Debug:**
-1. Check token in localStorage
-2. Verify Authorization header format: `Bearer {token}`
-3. Check token expiration
-
-### Issue 3: Task Date Mismatch
-
-**Symptom:** Task appears on wrong day
-
-**Cause:** Date should be in query param, not body
-
-**Fix:** Use `POST /plans/{planId}/tasks?date=2025-01-12`
-
-### Issue 4: Notification Read Method
-
-**Correct Method:** PUT (REST convention for state changes)
-
-```
-PUT /notifications/{notificationId}/read
-PUT /notifications/read-all
-```
-
-The backend uses PUT method as it follows REST conventions for state changes (idempotent operations).
+### 3. 400 Bad Request (계획 생성)
+- **원인**: 해당 주 계획이 이미 존재
+- **해결**: `GET /plans/current` 사용 (없으면 자동 생성)
 
 ---
 
-## Related Documentation
+## 관련 문서
 
-- [API Contract](./api-contract.md) - Complete REST API specification
-- [Domain Model](./domain-model.md) - Entity definitions
-- [Business Rules](./business-rules.md) - Business logic rules
-
----
-
-**Last Updated:** 2026-01-19
+- [API Contract](./api-contract.md) - 전체 API 명세
+- [Domain Model](./domain-model.md) - 엔티티 정의
+- [Business Rules](./business-rules.md) - 비즈니스 로직
